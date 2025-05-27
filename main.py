@@ -1,8 +1,6 @@
 from vector_store import VectorStore
 import numpy as np
 
-vector_store = VectorStore(dimension=3)
-
 sentences = [
     "The quick brown fox jumps over the lazy dog.",
     "A journey of a thousand miles begins with a single step.",
@@ -11,25 +9,22 @@ sentences = [
     "In the end, we will remember not the words of our enemies, but the silence of our friends."
 ]
 
-
 voc = set()
-
-for i in sentences:
-    tokens = i.lower().split()
+for sentence in sentences:
+    tokens = sentence.lower().split()
     voc.update(tokens)
-    
+
 wordtoidx = {word: idx for idx, word in enumerate(voc)}
+vector_store = VectorStore(dimension=len(voc))  # ✅ FIXED HERE
 
 sentence_vectors = {}
-for i in sentences:
-    tokens = i.lower().split()
+for sentence in sentences:
+    tokens = sentence.lower().split()
     vector = np.zeros(len(voc))
     for token in tokens:
         if token in wordtoidx:
             vector[wordtoidx[token]] += 1
-    
-    sentence_vectors[i] = vector
-
+    sentence_vectors[sentence] = vector
 
 for sentence, vector in sentence_vectors.items():
     vector_store.add_vector(sentence, vector)
@@ -43,7 +38,6 @@ for token in query_tokens:
 
 similar_sentences = vector_store.findsimvectors(query_vector, maxres=2)
 
-# Print similar sentences
 print("Query Sentence:", query_sentence)
 print("Similar Sentences:")
 for sentence, similarity in similar_sentences:
