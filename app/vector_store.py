@@ -3,29 +3,25 @@ import numpy as np
 import os
 
 class VectorStore:
-    def __init__(self, dimension, index_path="vector.index"):
+    def __init__(self, dimension, index_path="data/faiss.index"):
         self.dimension = dimension
         self.index_path = index_path
         self.id_map = []
 
         if os.path.exists(index_path):
             self.index = faiss.read_index(index_path)
-            self.id_map = self._load_id_map(index_path + ".ids")
+            self._load_ids()
         else:
             self.index = faiss.IndexFlatL2(dimension)
 
-    def add_vector(self, vector_id, vector):
+    def add(self, vector_id, vector):
         vector = np.asarray(vector, dtype=np.float32)
-        if vector.shape[0] != self.dimension:
-            raise ValueError("Vector dimension mismatch.")
-        self.index.add(np.expand_dims(vector, axis=0))
+        self.index.add(vector[np.newaxis])
         self.id_map.append(vector_id)
 
-    def findsimvectors(self, queryvec, maxres=5):
-        queryvec = np.asarray(queryvec, dtype=np.float32)
-        queryvec = np.expand_dims(queryvec, axis=0)
-        distances, indices = self.index.search(queryvec, maxres)
-
+    def query(self, query_vector, k=5):
+        query_vector = np.asarray(query_vector, dtype=np.float32).reshape(1, -1)
+        distances, indices = self.index.search(query_vector, k)
         results = []
         for dist, idx in zip(distances[0], indices[0]):
             if idx < len(self.id_map):
@@ -39,6 +35,6 @@ class VectorStore:
             for vid in self.id_map:
                 f.write(vid + "\n")
 
-    def _load_id_map(self, id_path):
-        with open(id_path, "r") as f:
-            return [line.strip() for line in f]
+    def _load_ids(self):
+        with open(self.index_path + ".ids", "r") as f:
+            self.id_map = [line.strip() for line in f]
