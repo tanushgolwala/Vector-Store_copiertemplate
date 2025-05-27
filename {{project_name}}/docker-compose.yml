@@ -21,6 +21,8 @@ services:
       - ./data:/app/data
     ports:
       - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/vector_db ## MAKE SURE TO CHANGE THIS BEFORE YOU ARE RUNNING POST COPIER TEMPLATE
 
 volumes:
   pgdata:
